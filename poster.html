@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Wellness & Fitness Tracker Poster</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #dff7ff, #e9ffe8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 30px;
+    }
+
+    .poster {
+      width: 850px;
+      min-height: 1100px;
+      background: white;
+      border-radius: 30px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.18);
+      position: relative;
+    }
+
+    .top-section {
+      background: linear-gradient(135deg, #00b4d8, #48cae4, #80ed99);
+      color: white;
+      padding: 55px 50px 75px;
+      text-align: center;
+      position: relative;
+    }
+
+    .tag {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.25);
+      padding: 8px 22px;
+      border-radius: 30px;
+      font-size: 15px;
+      letter-spacing: 1px;
+      margin-bottom: 18px;
+      font-weight: bold;
+    }
+
+    h1 {
+      font-size: 48px;
+      line-height: 1.15;
+      margin-bottom: 18px;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      font-size: 20px;
+      max-width: 680px;
+      margin: auto;
+      line-height: 1.6;
+    }
+
+    .circle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .circle.one {
+      width: 120px;
+      height: 120px;
+      top: 30px;
+      left: 40px;
+    }
+
+    .circle.two {
+      width: 90px;
+      height: 90px;
+      right: 55px;
+      bottom: 35px;
+    }
+
+    .content {
+      padding: 45px 50px;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 28px;
+      color: #0077b6;
+      margin-bottom: 28px;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 22px;
+      margin-bottom: 42px;
+    }
+
+    .card {
+      background: #f6fbff;
+      border: 2px solid #d7f3ff;
+      border-radius: 20px;
+      padding: 24px;
+      min-height: 145px;
+      transition: 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 119, 182, 0.15);
+    }
+
+    .icon {
+      font-size: 34px;
+      margin-bottom: 12px;
+    }
+
+    .card h3 {
+      color: #023e8a;
+      font-size: 21px;
+      margin-bottom: 8px;
+    }
+
+    .card p {
+      color: #444;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .highlight-box {
+      background: linear-gradient(135deg, #caf0f8, #d8f3dc);
+      border-radius: 25px;
+      padding: 32px;
+      margin-bottom: 38px;
+      text-align: center;
+    }
+
+    .highlight-box h2 {
+      color: #006d77;
+      font-size: 27px;
+      margin-bottom: 12px;
+    }
+
+    .highlight-box p {
+      color: #333;
+      font-size: 17px;
+      line-height: 1.7;
+    }
+
+    .modules {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 42px;
+    }
+
+    .module {
+      background: #eefbf4;
+      color: #1b4332;
+      padding: 14px 10px;
+      border-radius: 14px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 14px;
+      border: 1px solid #b7e4c7;
+    }
+
+    .tech-section {
+      background: #03045e;
+      color: white;
+      padding: 30px;
+      border-radius: 25px;
+      margin-bottom: 35px;
+    }
+
+    .tech-section h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 26px;
+      color: #90e0ef;
+    }
+
+    .tech-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .tech-list span {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .footer {
+      background: #0077b6;
+      color: white;
+      padding: 25px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 16px;
+    }
+
+    .footer strong {
+      color: #d8f3dc;
+    }
+
+    .badge {
+      background: white;
+      color: #0077b6;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-weight: bold;
+    }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+
+      .poster {
+        box-shadow: none;
+        border-radius: 0;
+        width: 100%;
+        min-height: 100vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="poster">
+    <div class="top-section">
+      <div class="circle one"></div>
+      <div class="circle two"></div>
+      <h1>Student Wellness<br />& Fitness Tracker</h1>
+      <p class="subtitle">A smart web application to help students track activity, sleep, hydration, wellness scores, goals, reminders, and peer challenges.</p>
+    </div>
+
+    <div class="content">
+      <h2 class="section-title">Core Features</h2>
+
+      <div class="features">
+        <div class="card">
+          <div class="icon">🏃</div>
+          <h3>Activity Log</h3>
+          <p>Record daily workouts, steps, exercises, and fitness activities to monitor student health progress.</p>
+        </div>
+
+        <div class="card">
+          <div class="icon">😴</div>
+          <h3>Sleep Tracker</h3>
+          <p>Track sleep duration and quality to encourage better rest and academic performance.</p>
+        </div>
+
+        <div class="card">
+          <div class="icon">💧</div>
+          <h3>Hydration Monitor</h3>
+          <p>Log water intake and receive reminders to maintain proper hydration throughout the day.</p>
+        </div>
+
+        <div class="card">
+          <div class="icon">📊</div>
+          <h3>Progress Charts</h3>
+          <p>Display weekly goals, wellness scores, and progress using simple visual charts and reports.</p>
+        </div>
+
+        <div class="card">
+          <div class="icon">🔔</div>
+          <h3>Notification System</h3>
+          <p>Send reminders for workouts, hydration, sleep goals, and weekly wellness targets.</p>
+        </div>
+
+        <div class="card">
+          <div class="icon">🤖</div>
+          <h3>WhatsApp Chatbot</h3>
+          <p>Allow students to log data, check progress, and receive wellness updates through WhatsApp.</p>
+        </div>
+      </div>
+
+      <div class="highlight-box">
+        <h2>Project Objective</h2>
+        <p>To improve student health awareness by combining wellness tracking, goal setting, notifications, peer motivation, and chatbot-based accessibility into one easy-to-use platform.</p>
+      </div>
+
+      <h2 class="section-title">Modules to Implement</h2>
+
+      <div class="modules">
+        <div class="module">User Login</div>
+        <div class="module">Dashboard</div>
+        <div class="module">Activity Log</div>
+        <div class="module">Sleep Tracker</div>
+        <div class="module">Hydration Tracker</div>
+        <div class="module">Wellness Score</div>
+        <div class="module">Weekly Goals</div>
+        <div class="module">Progress Charts</div>
+        <div class="module">Peer Challenges</div>
+        <div class="module">Notifications</div>
+        <div class="module">WhatsApp Chatbot</div>
+        <div class="module">Profile Settings</div>
+      </div>
+
+      <div class="tech-section">
+        <h2>Tools & Technologies</h2>
+        <div class="tech-list">
+          <span>HTML5</span>
+          <span>CSS3</span>
+          <span>JavaScript</span>
+          <span>React.js</span>
+          <span>Node.js</span>
+          <span>Express.js</span>
+          <span>REST APIs</span>
+          <span>Axios</span>
+          <span>MySQL</span>
+          <span>LocalStorage</span>
+          <span>Postman</span>
+          <span>WhatsApp API</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div><strong>Developed For:</strong> Student Health & Wellness</div>
+      <div class="badge">Stay Fit • Stay Focused</div>
+    </div>
+  </div>
+</body>
+</html>
