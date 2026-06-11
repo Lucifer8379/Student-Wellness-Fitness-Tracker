@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>WellNest · Complete Student Wellness Ecosystem</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --accent: #3EC97E;
+  --accent-dark: #27A563;
+  --accent-pale: #E8FAF1;
+  --lamp-core: #FFD166;
+  --text-on: #e8eae4;
+  --muted-on: rgba(232,234,228,0.5);
+  --card-on: rgba(255,255,255,0.05);
+  --card-off: rgba(255,255,255,0.02);
+  --border-on: rgba(255,255,255,0.1);
+  --bg-page: #F4F6F0;
+  --text-main: #1A1E16;
+  --text-muted: #6B7066;
+  --mood-1: #FFB347;
+  --mood-2: #FF6B6B;
+  --mood-3: #4ECDC4;
+  --mood-4: #9B59B6;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background-color: #121417;
+  color: var(--text-on);
+  overflow-x: hidden;
+}
+
+/* page system */
+.page {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  pointer-events: all;
+  transition: none;
+  overflow-y: auto;
+}
+
+.page.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* login grid */
+.bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg,rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+
+.lamp-glow-blob {
+  position: absolute;
+  width: 400px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 60% 20%, rgba(255,220,100,0.18) 0%, transparent 65%);
+  pointer-events: none;
+  opacity: 0;
+}
+
+body[data-on="true"] .lamp-glow-blob {
+  opacity: 1;
+}
+
+.scene {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.lamp-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.lamp-mount {
+  width: 48px;
+  height: 8px;
+  background: #2a2d32;
+  border-radius: 4px;
+}
+
+.lamp-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+.lamp-cord {
+  width: 2px;
+  height: 80px;
+  background: linear-gradient(to bottom, #555, #888);
+  position: relative;
+}
+
+.lamp-cord::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #777;
+}
+
+.lamp-body {
+  width: 80px;
+  height: 56px;
+  position: relative;
+  margin-top: 5px;
+}
+
+.lamp-shade {
+  width: 0;
+  height: 0;
+  border-left: 40px solid transparent;
+  border-right: 40px solid transparent;
+  border-top: 56px solid #2a2d32;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+}
+
+body[data-on="true"] .lamp-shade {
+  border-top-color: #3a3d42;
+  filter: drop-shadow(0 4px 24px rgba(255,209,102,0.65));
+}
+
+.lamp-bulb {
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #333;
+}
+
+body[data-on="true"] .lamp-bulb {
+  background: var(--lamp-core);
+  box-shadow: 0 0 24px 10px rgba(255,209,102,0.75);
+}
+
+.lamp-cone {
+  width: 0;
+  height: 0;
+  border-left: 80px solid transparent;
+  border-right: 80px solid transparent;
+  border-top: 500px solid rgba(255,209,102,0.05);
+  margin-top: 12px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+body[data-on="true"] .lamp-cone {
+  opacity: 1;
+}
+
+.lamp-hint {
+  position: absolute;
+  bottom: -32px;
+  font-size: 0.65rem;
+  color: #333;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.login-form {
+  width: 380px;
+  padding: 2.6rem 2.2rem;
+  background: var(--card-off);
+  border: 1px solid var(--border-off);
+  border-radius: 24px;
+  backdrop-filter: blur(20px);
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+  transition: opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s;
+  margin-top: 60px;
+}
+
+.login-form.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
+  background: var(--card-on);
+  border-color: var(--border-on);
+}
+
+.form-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.8rem;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.logo-text {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.logo-text span {
+  color: var(--accent);
+}
+
+.form-heading {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 0.35rem;
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.82rem 1rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  color: var(--text-on);
+  outline: none;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 0.9rem;
+  background: var(--accent);
+  color: #0f1a14;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.signup-row {
+  text-align: center;
+  font-size: 0.8rem;
+  margin-top: 1rem;
+}
+
+.signup-row a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* App shell (dashboard style) */
+#page-home {
+  background-color: var(--bg-page);
+  align-items: flex-start;
+  overflow-y: auto;
+  color: var(--text-main);
+  display: none;
+  flex-direction: column;
+}
+
+#page-home.active {
+  display: flex;
+}
+
+.hn {
+  width: 100%;
+  background: #fff;
+  padding: 0.85rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.hn-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.35rem;
+}
+
+.hn-logo span {
+  color: var(--accent);
+}
+
+.hn-links {
+  display: flex;
+  gap: 0.25rem;
+  list-style: none;
+  flex-wrap: wrap;
+}
+
+.hn-links a {
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+}
+
+.hn-links a.active,
+.hn-links a:hover {
+  color: var(--accent-dark);
+  background: var(--accent-pale);
+}
+
+.hn-logout {
+  background: none;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 100px;
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+}
+
+/* main content container */
+.app-content {
+  width: 100%;
+  padding: 2rem;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.content-section {
+  display: none;
+}
+
+.content-section.active {
+  display: block;
+}
+
+.page-header {
+  margin-bottom: 1.8rem;
+}
+
+.page-header h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 1.3rem;
+  border: 1px solid rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+.tracker-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--accent-dark);
+}
+
+.mood-selector {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+.mood-btn {
+  background: #f0f2f0;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 40px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.mood-btn.selected {
+  background: var(--accent);
+  color: white;
+}
+
+.progress-bar {
+  background: #e9ecef;
+  border-radius: 10px;
+  height: 10px;
+  overflow: hidden;
+  margin: 0.5rem 0;
+}
+
+.progress-fill {
+  width: 0%;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 10px;
+}
+
+.report-item {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.about-text {
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+@media (max-width: 680px) {
+  .hn { flex-direction: column; align-items: stretch; }
+  .hn-links { justify-content: center; }
+  .app-content { padding: 1rem; }
+}
+</style>
+</head>
+<body data-on="false">
+
+<div id="transition-overlay" style="position:fixed; inset:0; background:var(--accent); z-index:999; transform:scaleY(0); transform-origin:bottom; pointer-events:none;"></div>
+<div id="logout-curtain" style="position:fixed; inset:0; background:#1A1E16; z-index:1000; transform:translateX(-100%); pointer-events:none; display:flex; align-items:center; justify-content:center; flex-direction:column;">
+  <div style="width:6px; height:6px; border-radius:50%; background:#3EC97E; opacity:0;"></div>
+  <div style="font-family:'Syne'; font-size:1.8rem; font-weight:800; color:white;">See you soon 👋</div>
+</div>
+
+<!-- LOGIN PAGE (with register toggle) -->
+<div class="page" id="page-login">
+  <div class="bg-grid"></div>
+  <div class="lamp-glow-blob"></div>
+  <div class="scene">
+    <div class="lamp-col">
+      <div class="lamp-mount"></div>
+      <div class="lamp-wrap" id="lampWrap">
+        <div class="lamp-cord"></div>
+        <div class="lamp-body"><div class="lamp-shade"></div><div class="lamp-bulb"></div></div>
+        <div class="lamp-hint"></div>
+      </div>
+      <div class="lamp-cone"></div>
+    </div>
+    <div>
+      <div class="login-form" id="loginForm">
+        <div class="form-logo"><div class="logo-icon">🌿</div><div class="logo-text">Well<span>Nest</span></div></div>
+        <div class="form-heading" id="authTitle">Welcome back</div>
+        <div class="input-group"><input class="input-field" id="authEmail" placeholder="Student Email" type="email"></div>
+        <div class="input-group"><input class="input-field" id="authPass" placeholder="Password" type="password"></div>
+        <div class="input-group" id="nameGroup" style="display:none;"><input class="input-field" id="authName" placeholder="Full Name"></div>
+        <button class="submit-btn" id="authBtn">Sign In →</button>
+        <div class="signup-row" id="toggleAuthMsg">New here? <a href="#" id="toggleAuthLink">Create an account</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD + ALL PAGES -->
+<div class="page hidden" id="page-home">
+  <nav class="hn">
+    <div class="hn-logo">Well<span>Nest</span></div>
+    <ul class="hn-links" id="navLinks">
+      <li><a href="#" data-tab="dashboard" class="active">🏠 Dashboard</a></li>
+      <li><a href="#" data-tab="fitness">🏃 Fitness</a></li>
+      <li><a href="#" data-tab="sleep">😴 Sleep</a></li>
+      <li><a href="#" data-tab="water">💧 Water</a></li>
+      <li><a href="#" data-tab="nutrition">🥗 Nutrition</a></li>
+      <li><a href="#" data-tab="mood">😊 Mood</a></li>
+      <li><a href="#" data-tab="reports">📊 Reports</a></li>
+      <li><a href="#" data-tab="profile">👤 Profile</a></li>
+      <li><a href="#" data-tab="about">ℹ️ About</a></li>
+    </ul>
+    <div><button class="hn-logout" id="logoutBtn">Sign out</button></div>
+  </nav>
+  <div class="app-content" id="appContent">
+    <!-- DASHBOARD -->
+    <div id="section-dashboard" class="content-section active">
+      <div class="page-header"><h2>Dashboard</h2><p>Your wellness snapshot, powered by daily habits.</p></div>
+      <div class="card-grid">
+        <div class="stat-card"><div class="tracker-value" id="dashSteps">7,024</div><div>Daily Steps</div><div class="progress-bar"><div class="progress-fill" style="width:70%"></div></div></div>
+        <div class="stat-card"><div class="tracker-value" id="dashSleep">6.5h</div><div>Sleep avg</div></div>
+        <div class="stat-card"><div class="tracker-value" id="dashWater">1.8L</div><div>Water intake</div></div>
+        <div class="stat-card"><div class="tracker-value" id="dashMood">😊 Great</div><div>Current mood</div></div>
+      </div>
+      <div class="stat-card"><h3>✨ Quote of the day</h3><p>"Small consistent actions build extraordinary wellness."</p></div>
+    </div>
+
+    <!-- FITNESS TRACKER -->
+    <div id="section-fitness" class="content-section">
+      <div class="page-header"><h2>Fitness Tracker</h2><p>Log workouts, steps, and active minutes.</p></div>
+      <div class="card-grid">
+        <div class="stat-card"><div class="tracker-value" id="fitSteps">7,024</div><label>Steps today</label><input type="range" id="stepSlider" min="0" max="15000" value="7024" step="100"><div><button id="addStepBtn" class="submit-btn" style="margin-top:10px;">+500 steps</button></div></div>
+        <div class="stat-card"><div class="tracker-value" id="fitActive">45 min</div><label>Active minutes</label><input type="range" id="activeSlider" min="0" max="180" value="45"></div>
+        <div class="stat-card"><div class="tracker-value" id="fitWorkouts">3</div><label>Workouts today</label><button id="addWorkoutBtn" class="submit-btn" style="margin-top:10px;">➕ Add workout</button></div>
+      </div>
+    </div>
+
+    <!-- SLEEP TRACKER -->
+    <div id="section-sleep" class="content-section">
+      <div class="page-header"><h2>Sleep Tracker</h2><p>Restorative rest leads to better focus.</p></div>
+      <div class="card-grid">
+        <div class="stat-card"><div class="tracker-value" id="sleepHours">6.5</div><label>Hours slept</label><input type="range" id="sleepSlider" min="0" max="12" step="0.5" value="6.5"></div>
+        <div class="stat-card"><div class="tracker-value" id="sleepQuality">😌 Good</div><label>Sleep quality</label><select id="sleepQualitySelect"><option>😴 Poor</option><option selected>😌 Good</option><option>🌟 Excellent</option></select></div>
+        <div class="stat-card"><div class="tracker-value">🎯 Goal: 8h</div><div class="progress-bar"><div class="progress-fill" id="sleepProgressFill" style="width:81%"></div></div></div>
+      </div>
+    </div>
+
+    <!-- WATER INTAKE -->
+    <div id="section-water" class="content-section">
+      <div class="page-header"><h2>Water Intake</h2><p>Stay hydrated, stay sharp.</p></div>
+      <div class="card-grid">
+        <div class="stat-card"><div class="tracker-value" id="waterLitres">1.8L</div><div>of 2.0L goal</div><div class="progress-bar"><div class="progress-fill" id="waterFill" style="width:90%"></div></div><div id="waterGlassesContainer" style="display:flex; gap:8px; margin-top:1rem; flex-wrap:wrap;"></div><button id="addWaterBtn" class="submit-btn">💧 +250ml</button></div>
+      </div>
+    </div>
+
+    <!-- NUTRITION -->
+    <div id="section-nutrition" class="content-section">
+      <div class="page-header"><h2>Nutrition Tracker</h2><p>Macros & meals to fuel your day.</p></div>
+      <div class="card-grid">
+        <div class="stat-card"><div class="tracker-value" id="caloriesIntake">1,340</div><label>Calories eaten</label><input type="range" id="calSlider" min="0" max="3000" value="1340"></div>
+        <div class="stat-card"><div class="tracker-value" id="proteinIntake">72g</div><label>Protein (g)</label><input type="range" id="proteinSlider" min="0" max="150" value="72"></div>
+        <div class="stat-card"><div class="tracker-value">🥑 Balanced</div><p>Carbs 168g · Fat 38g</p></div>
+      </div>
+    </div>
+
+    <!-- MOOD TRACKER -->
+    <div id="section-mood" class="content-section">
+      <div class="page-header"><h2>Mood Tracker</h2><p>How are you feeling today?</p></div>
+      <div class="card-grid">
+        <div class="stat-card"><div class="tracker-value" id="currentMoodDisplay">😊 Great</div><div class="mood-selector" id="moodSelector"><button data-mood="😊 Great" class="mood-btn">😊 Great</button><button data-mood="😐 Okay" class="mood-btn">😐 Okay</button><button data-mood="😔 Tired" class="mood-btn">😔 Tired</button><button data-mood="😌 Relaxed" class="mood-btn">😌 Relaxed</button><button data-mood="⚡ Stressed" class="mood-btn">⚡ Stressed</button></div><button id="saveMoodBtn" class="submit-btn">Save Today's Mood</button><p id="moodHistoryNote" style="margin-top:1rem; font-size:0.8rem;">Last 5 entries will appear in reports.</p></div>
+      </div>
+    </div>
+
+    <!-- REPORTS & ANALYTICS -->
+    <div id="section-reports" class="content-section">
+      <div class="page-header"><h2>Reports & Analytics</h2><p>Weekly insights and trends.</p></div>
+      <div class="card-grid">
+        <div class="stat-card"><h3>📈 Weekly Step Avg</h3><div class="tracker-value" id="reportStepsAvg">6,820</div><div>↑ 8% vs last week</div></div>
+        <div class="stat-card"><h3>😴 Sleep Consistency</h3><div class="tracker-value" id="reportSleepAvg">6.8h</div><div>Goal: 8h</div></div>
+        <div class="stat-card"><h3>💧 Hydration Score</h3><div class="tracker-value" id="reportWaterAvg">85%</div><div>Days meeting goal: 5/7</div></div>
+        <div class="stat-card"><h3>😊 Mood Distribution</h3><div id="moodSummary">😊 Great (3) · 😐 Okay (2) · 😌 Relaxed (2)</div></div>
+      </div>
+      <div class="stat-card"><h3>✨ Recommendation</h3><p id="insightText">Increase water intake to improve energy levels.</p></div>
+    </div>
+
+    <!-- PROFILE PAGE -->
+    <div id="section-profile" class="content-section">
+      <div class="page-header"><h2>Your Profile</h2><p>Manage account and wellness preferences.</p></div>
+      <div class="card-grid">
+        <div class="stat-card"><label>Full Name</label><input type="text" id="profileName" class="input-field" value="Alex Student"><label>Email</label><input type="email" id="profileEmail" class="input-field" value="alex@university.edu"><label>Wellness Goal</label><select id="profileGoal" class="input-field"><option>Stay active & fit</option><option>Improve sleep</option><option>Balanced nutrition</option></select><button id="updateProfileBtn" class="submit-btn" style="margin-top:1rem;">Update Profile</button></div>
+        <div class="stat-card"><h3>🏆 Achievements</h3><p>🌟 5-day streak</p><p>💧 Hydration Hero</p><p>🏃 10k steps club</p></div>
+      </div>
+    </div>
+
+    <!-- CONTACT/ABOUT PAGE -->
+    <div id="section-about" class="content-section">
+      <div class="page-header"><h2>About & Contact</h2><p>WellNest — your companion for student wellness.</p></div>
+      <div class="card-grid">
+        <div class="stat-card about-text"><h3>🌿 Our Mission</h3><p>Empowering students to thrive through holistic tracking of fitness, sleep, nutrition, and emotional well-being.</p><h3>📧 Contact</h3><p>Email: support@wellnest.edu<br>Student wellness hours: 24/7 digital support</p><h3>📍 Campus Hub</h3><p>Wellness Center, Room 204, University Union</p></div>
+        <div class="stat-card"><h3>⭐ Version</h3><p>WellNest 2.0 — All-in-one wellness suite</p><p>© 2025 Student Wellness Initiative</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ----- DATA STORE -----
+let appData = {
+  steps: 7024,
+  activeMins: 45,
+  workouts: 3,
+  sleepHours: 6.5,
+  sleepQuality: "Good",
+  waterMl: 1800,
+  calories: 1340,
+  protein: 72,
+  mood: "😊 Great",
+  moodHistory: ["😊 Great","😐 Okay","😊 Great","😌 Relaxed","😊 Great"],
+  userName: "Alex",
+  userEmail: "alex@university.edu"
+};
+
+// helper UI updates
+function updateAllTrackers() {
+  document.getElementById('dashSteps').innerText = appData.steps.toLocaleString();
+  document.getElementById('dashSleep').innerText = appData.sleepHours + "h";
+  document.getElementById('dashWater').innerText = (appData.waterMl/1000).toFixed(1)+"L";
+  document.getElementById('dashMood').innerHTML = appData.mood;
+  
+  // fitness
+  document.getElementById('fitSteps').innerText = appData.steps.toLocaleString();
+  document.getElementById('fitActive').innerText = appData.activeMins + " min";
+  document.getElementById('fitWorkouts').innerText = appData.workouts;
+  if(document.getElementById('stepSlider')) document.getElementById('stepSlider').value = appData.steps;
+  if(document.getElementById('activeSlider')) document.getElementById('activeSlider').value = appData.activeMins;
+  
+  // sleep
+  document.getElementById('sleepHours').innerText = appData.sleepHours;
+  document.getElementById('sleepQuality').innerHTML = appData.sleepQuality === "Good" ? "😌 Good" : (appData.sleepQuality === "Excellent" ? "🌟 Excellent" : "😴 Poor");
+  if(document.getElementById('sleepSlider')) document.getElementById('sleepSlider').value = appData.sleepHours;
+  let sleepPct = (appData.sleepHours/8)*100;
+  document.getElementById('sleepProgressFill').style.width = Math.min(100,sleepPct)+"%";
+  
+  // water
+  let litres = (appData.waterMl/1000).toFixed(1);
+  document.getElementById('waterLitres').innerText = litres+"L";
+  let waterPct = (appData.waterMl/2000)*100;
+  document.getElementById('waterFill').style.width = Math.min(100,waterPct)+"%";
+  renderWaterGlasses();
+  
+  // nutrition
+  document.getElementById('caloriesIntake').innerText = appData.calories;
+  document.getElementById('proteinIntake').innerText = appData.protein+"g";
+  if(document.getElementById('calSlider')) document.getElementById('calSlider').value = appData.calories;
+  if(document.getElementById('proteinSlider')) document.getElementById('proteinSlider').value = appData.protein;
+  
+  // mood display
+  document.getElementById('currentMoodDisplay').innerHTML = appData.mood;
+  
+  // reports dynamic
+  let stepAvg = 6820; 
+  document.getElementById('reportStepsAvg').innerText = stepAvg.toLocaleString();
+  document.getElementById('reportSleepAvg').innerText = appData.sleepHours+"h";
+  let waterScore = Math.round((appData.waterMl/2000)*100);
+  document.getElementById('reportWaterAvg').innerHTML = waterScore+"%";
+  let moodCounts = { "😊 Great":0,"😐 Okay":0,"😌 Relaxed":0,"😔 Tired":0,"⚡ Stressed":0 };
+  appData.moodHistory.forEach(m=>{ if(moodCounts[m]) moodCounts[m]++; else moodCounts[m]=1; });
+  let moodText = Object.entries(moodCounts).map(([k,v])=>`${k} (${v})`).join(" · ");
+  document.getElementById('moodSummary').innerHTML = moodText || "😊 Great (3) · 😐 Okay (1)";
+  let insight = appData.waterMl < 1500 ? "Increase water intake to improve energy." : (appData.sleepHours < 7 ? "Prioritize 8h sleep for better focus." : "Keep up the great balance!");
+  document.getElementById('insightText').innerText = insight;
+  
+  // profile fields
+  if(document.getElementById('profileName')) document.getElementById('profileName').value = appData.userName;
+  if(document.getElementById('profileEmail')) document.getElementById('profileEmail').value = appData.userEmail;
+}
+
+function renderWaterGlasses() {
+  let container = document.getElementById('waterGlassesContainer');
+  if(!container) return;
+  let glasses = Math.floor(appData.waterMl / 250);
+  container.innerHTML = '';
+  for(let i=0;i<8;i++){
+    let glass = document.createElement('div');
+    glass.style.width='40px'; glass.style.height='50px'; glass.style.border='2px solid #0BCBD4'; glass.style.borderRadius='4px'; glass.style.background = i<glasses ? '#0BCBD4' : 'white'; glass.style.cursor='pointer';
+    glass.onclick = () => { appData.waterMl = (i+1)*250 > 2000 ? 2000 : (i+1)*250; updateAllTrackers(); };
+    container.appendChild(glass);
+  }
+}
+
+function addWater(ml){ appData.waterMl = Math.min(2000, appData.waterMl+ml); updateAllTrackers(); }
+function addSteps(extra){ appData.steps = Math.min(25000, appData.steps+extra); updateAllTrackers(); }
+function addWorkout(){ appData.workouts++; updateAllTrackers(); }
+
+// mood save
+function saveMood(mood){
+  appData.mood = mood;
+  appData.moodHistory.unshift(mood);
+  if(appData.moodHistory.length > 5) appData.moodHistory.pop();
+  updateAllTrackers();
+}
+
+// navigation & tab switching
+function switchToTab(tabId) {
+  document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('section-'+tabId);
+  if(target) target.classList.add('active');
+  document.querySelectorAll('.hn-links a').forEach(a => a.classList.remove('active'));
+  let activeLink = Array.from(document.querySelectorAll('.hn-links a')).find(a => a.dataset.tab === tabId);
+  if(activeLink) activeLink.classList.add('active');
+}
+
+// Login / Register logic
+let isRegisterMode = false;
+const toggleLink = document.getElementById('toggleAuthLink');
+const authTitle = document.getElementById('authTitle');
+const nameGroup = document.getElementById('nameGroup');
+const authBtn = document.getElementById('authBtn');
+
+toggleLink.addEventListener('click', (e) => {
+  e.preventDefault();
+  isRegisterMode = !isRegisterMode;
+  if(isRegisterMode){
+    authTitle.innerText = 'Create account';
+    nameGroup.style.display = 'block';
+    toggleLink.innerText = 'Already have an account? Sign in';
+    authBtn.innerText = 'Register →';
+  } else {
+    authTitle.innerText = 'Welcome back';
+    nameGroup.style.display = 'none';
+    toggleLink.innerText = 'New here? Create an account';
+    authBtn.innerText = 'Sign In →';
+  }
+});
+
+function handleAuth() {
+  let email = document.getElementById('authEmail').value.trim();
+  let pass = document.getElementById('authPass').value.trim();
+  if(!email || !pass) { alert("Please fill email & password"); return; }
+  let name = isRegisterMode ? document.getElementById('authName').value.trim() : email.split('@')[0];
+  if(isRegisterMode && !name) { alert("Enter full name"); return; }
+  appData.userName = name || "Student";
+  appData.userEmail = email;
+  // after auth -> go home
+  goHomeAfterLogin();
+}
+
+function goHomeAfterLogin() {
+  const overlay = document.getElementById('transition-overlay');
+  const loginPage = document.getElementById('page-login');
+  const homePage = document.getElementById('page-home');
+  updateAllTrackers();
+  gsap.timeline()
+    .set(overlay, { scaleY: 0, transformOrigin: 'bottom' })
+    .to(overlay, { scaleY: 1, duration: 0.5, ease: 'power3.inOut' })
+    .call(() => {
+      loginPage.classList.add('hidden');
+      homePage.classList.remove('hidden');
+      homePage.classList.add('active');
+    })
+    .to(overlay, { scaleY: 0, transformOrigin: 'top', duration: 0.5, ease: 'power3.inOut' });
+}
+
+function handleLogout() {
+  const curtain = document.getElementById('logout-curtain');
+  curtain.style.transform = 'translateX(0%)';
+  curtain.style.pointerEvents = 'all';
+  setTimeout(() => {
+    const homePage = document.getElementById('page-home');
+    const loginPage = document.getElementById('page-login');
+    homePage.classList.add('hidden');
+    homePage.classList.remove('active');
+    loginPage.classList.remove('hidden');
+    document.body.setAttribute('data-on', false);
+    isRegisterMode = false;
+    if(nameGroup) nameGroup.style.display = 'none';
+    if(authTitle) authTitle.innerText = 'Welcome back';
+    if(toggleLink) toggleLink.innerText = 'New here? Create an account';
+    if(authBtn) authBtn.innerText = 'Sign In →';
+    document.getElementById('authEmail').value = '';
+    document.getElementById('authPass').value = '';
+    document.getElementById('authName').value = '';
+    curtain.style.transform = 'translateX(-100%)';
+    setTimeout(() => { curtain.style.pointerEvents = 'none'; }, 400);
+  }, 500);
+}
+
+// event listeners
+document.getElementById('addWaterBtn')?.addEventListener('click',()=>addWater(250));
+document.getElementById('addStepBtn')?.addEventListener('click',()=>addSteps(500));
+document.getElementById('addWorkoutBtn')?.addEventListener('click',addWorkout);
+document.getElementById('stepSlider')?.addEventListener('input',(e)=>{ appData.steps = parseInt(e.target.value); updateAllTrackers(); });
+document.getElementById('activeSlider')?.addEventListener('input',(e)=>{ appData.activeMins = parseInt(e.target.value); updateAllTrackers(); });
+document.getElementById('sleepSlider')?.addEventListener('input',(e)=>{ appData.sleepHours = parseFloat(e.target.value); updateAllTrackers(); });
+document.getElementById('sleepQualitySelect')?.addEventListener('change',(e)=>{ appData.sleepQuality = e.target.value === "😌 Good" ? "Good" : (e.target.value === "🌟 Excellent" ? "Excellent" : "Poor"); updateAllTrackers(); });
+document.getElementById('calSlider')?.addEventListener('input',(e)=>{ appData.calories = parseInt(e.target.value); updateAllTrackers(); });
+document.getElementById('proteinSlider')?.addEventListener('input',(e)=>{ appData.protein = parseInt(e.target.value); updateAllTrackers(); });
+document.getElementById('saveMoodBtn')?.addEventListener('click',()=>{ let selected = document.querySelector('.mood-btn.selected'); if(selected) saveMood(selected.innerText); else alert("Select a mood first"); });
+document.getElementById('updateProfileBtn')?.addEventListener('click',()=>{ appData.userName = document.getElementById('profileName').value; appData.userEmail = document.getElementById('profileEmail').value; updateAllTrackers(); alert("Profile updated"); });
+document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+authBtn.addEventListener('click', handleAuth);
+document.querySelectorAll('.mood-btn').forEach(btn => {
+  btn.addEventListener('click',()=>{ document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); });
+});
+document.querySelectorAll('.hn-links a').forEach(link => {
+  link.addEventListener('click', (e) => { e.preventDefault(); switchToTab(link.dataset.tab); });
+});
+// LAMP toggle
+let lampOn = false;
+const lampWrap = document.getElementById('lampWrap');
+lampWrap.addEventListener('click',()=>{
+  lampOn = !lampOn;
+  document.body.setAttribute('data-on', lampOn);
+  const loginForm = document.getElementById('loginForm');
+  if(lampOn) loginForm.classList.add('active');
+  else loginForm.classList.remove('active');
+});
+// default mood selected
+document.querySelector('.mood-btn')?.classList.add('selected');
+updateAllTrackers();
+</script>
+</body>
+</html>
