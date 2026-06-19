@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WellnessTrack · Student Fitness</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    /* ─── RESET ─── (same as before) */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    :root {
+      --accent: #3EC97E;
+      --accent-dark: #27A563;
+      --accent-pale: #E8FAF1;
+      --lamp-core: #FFD166;
+      --text-on: #e8eae4;
+      --muted-on: rgba(232, 234, 228, 0.5);
+      --card-on: rgba(255, 255, 255, 0.05);
+      --card-off: rgba(255, 255, 255, 0.02);
+    }
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #121417;
+      color: var(--text-on);
+    }
+    .page {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+      transition: opacity .4s;
+    }
+    .page.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ─── LOGIN PAGE ─── */
+    #page-login {
+      background: #121417;
+    }
+    .bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .lamp-glow-blob {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at 60% 20%, rgba(255,220,100,0.18) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0;
+      transition: opacity .8s;
+    }
+    body[data-on="true"] .lamp-glow-blob {
+      opacity: 1;
+    }
+    .scene {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      height: 100vh;
+      width: 100%;
+    }
+
+    /* ─── LAMP ─── (same) */
+    .lamp-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+      justify-content: center;
+    }
+    .lamp-mount {
+      width: 48px;
+      height: 6px;
+      background: #2a2d32;
+      border-radius: 4px;
+    }
+    .lamp-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+    .lamp-cord {
+      width: 2px;
+      height: 40px;
+      background: linear-gradient(to bottom, #555, #888);
+      position: relative;
+    }
+    .lamp-cord::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #777;
+    }
+    .lamp-body {
+      width: 70px;
+      height: 46px;
+      position: relative;
+      margin-top: 4px;
+    }
+    .lamp-shade {
+      width: 0;
+      height: 0;
+      border-left: 35px solid transparent;
+      border-right: 35px solid transparent;
+      border-top: 46px solid #2a2d32;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+      transition: filter .6s, border-top-color .4s;
+    }
+    body[data-on="true"] .lamp-shade {
+      border-top-color: #3a3d42;
+      filter: drop-shadow(0 4px 24px rgba(255,209,102,0.65));
+    }
+    .lamp-bulb {
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #333;
+      transition: background .4s, box-shadow .4s;
+    }
+    body[data-on="true"] .lamp-bulb {
+      background: var(--lamp-core);
+      box-shadow: 0 0 24px 10px rgba(255,209,102,0.75), 0 0 70px 28px rgba(255,209,102,0.25);
+    }
+    .lamp-hint {
+      margin-top: 12px;
+      font-size: .55rem;
+      color: #333;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 500;
+      transition: color .4s;
+    }
+    body[data-on="true"] .lamp-hint {
+      color: rgba(255,209,102,0.4);
+    }
+    .lamp-wrap:hover .lamp-hint {
+      color: var(--accent);
+    }
+
+    /* ─── LOGIN / REGISTER FORMS ─── (slightly adjusted) */
+    .login-form,
+    .register-form {
+      width: 380px;
+      padding: 2.4rem 2rem;
+      background: var(--card-off);
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: 24px;
+      backdrop-filter: blur(20px);
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+      transition: opacity .6s .2s, transform .6s .2s, background .6s, border-color .6s;
+      flex-shrink: 0;
+    }
+    .login-form.active {
+      opacity: 1;
+      transform: translateY(15px);
+      pointer-events: all;
+      background: var(--card-on);
+      border-color: rgba(255,255,255,0.1);
+    }
+    .register-form.active {
+      opacity: 1;
+      transform: translateY(-600px);
+      pointer-events: all;
+      background: var(--card-on);
+      border-color: rgba(255,255,255,0.1);
+    }
+    .form-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1.6rem;
+    }
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+    .logo-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-on);
+      letter-spacing: -0.5px;
+    }
+    .logo-text span {
+      color: var(--accent);
+    }
+    .form-heading {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text-on);
+      letter-spacing: -0.5px;
+      margin-bottom: .25rem;
+    }
+    .form-sub {
+      font-size: .8rem;
+      color: var(--muted-on);
+      margin-bottom: 1.6rem;
+    }
+    .input-group {
+      position: relative;
+      margin-bottom: .9rem;
+    }
+    .input-label {
+      display: block;
+      font-size: .75rem;
+      font-weight: 500;
+      color: var(--muted-on);
+      margin-bottom: .4rem;
+      letter-spacing: .5px;
+    }
+    .input-field {
+      width: 100%;
+      padding: .75rem 1rem .75rem 2.5rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .9rem;
+      color: var(--text-on);
+      outline: none;
+      transition: border-color .25s, background .25s;
+    }
+    .input-field::placeholder {
+      color: rgba(255,255,255,0.2);
+    }
+    .input-field:focus {
+      border-color: var(--accent);
+      background: rgba(62,201,126,0.05);
+    }
+    .input-icon {
+      position: absolute;
+      left: .8rem;
+      bottom: .8rem;
+      font-size: .9rem;
+      pointer-events: none;
+    }
+    .remember-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.2rem;
+      font-size: .75rem;
+    }
+    .remember-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted-on);
+      cursor: pointer;
+    }
+    .remember-label input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 14px;
+      height: 14px;
+    }
+    .forgot-link {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .forgot-link:hover {
+      opacity: .7;
+    }
+    .submit-btn {
+      width: 100%;
+      padding: .8rem;
+      background: var(--accent);
+      color: #0f1a14;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Syne', sans-serif;
+      font-size: .9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s, transform .15s;
+      margin-bottom: 1.2rem;
+    }
+    .submit-btn:hover {
+      background: var(--accent-dark);
+      transform: translateY(-1px);
+    }
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      font-size: .7rem;
+      color: rgba(255,255,255,0.2);
+    }
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.08);
+    }
+    .social-btn {
+      width: 100%;
+      padding: .65rem;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      color: var(--muted-on);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background .2s, border-color .2s, color .2s;
+      margin-bottom: .6rem;
+    }
+    .social-btn:hover {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.14);
+      color: var(--text-on);
+    }
+    .signup-row {
+      text-align: center;
+      font-size: .75rem;
+      color: var(--muted-on);
+      margin-top: .4rem;
+    }
+    .signup-row a,
+    .auth-toggle a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .auth-toggle {
+      text-align: center;
+      font-size: .75rem;
+      color: var(--muted-on);
+      margin-top: .8rem;
+    }
+
+    /* ─── HOME PAGE ─── (same layout, new content) */
+    #page-home {
+      background: #F4F6F0;
+      align-items: flex-start;
+      overflow: hidden;
+      display: none;
+      flex-direction: column;
+      color: #1A1E16;
+    }
+    #page-home.active {
+      display: flex;
+    }
+
+    .hn {
+      width: 100%;
+      background: #fff;
+      border-bottom: 1px solid rgba(0,0,0,0.07);
+      padding: 1rem 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      flex-shrink: 0;
+    }
+    .hn-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.35rem;
+      letter-spacing: -0.5px;
+      color: #1A1E16;
+    }
+    .hn-logo span {
+      color: var(--accent);
+    }
+    .hn-links {
+      display: flex;
+      gap: .3rem;
+      list-style: none;
+    }
+    .hn-links a {
+      text-decoration: none;
+      font-size: .88rem;
+      font-weight: 500;
+      color: #6B7066;
+      padding: .45rem .9rem;
+      border-radius: 8px;
+      transition: color .2s, background .2s;
+      cursor: pointer;
+    }
+    .hn-links a:hover {
+      color: var(--accent-dark);
+      background: var(--accent-pale);
+    }
+    .hn-links a.active {
+      color: var(--accent-dark);
+      background: var(--accent-pale);
+      font-weight: 600;
+    }
+    .hn-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .hn-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #0BCBD4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: .8rem;
+      color: #fff;
+      cursor: pointer;
+    }
+    .hn-logout {
+      font-size: .8rem;
+      color: #6B7066;
+      background: none;
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 100px;
+      padding: .35rem .9rem;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: background .2s, color .2s;
+    }
+    .hn-logout:hover {
+      background: #fee;
+      color: #c00;
+      border-color: #fcc;
+    }
+
+    .inner-page {
+      display: none;
+      flex-direction: column;
+      width: 100%;
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .inner-page.active {
+      display: flex;
+    }
+
+    .h-hero {
+      width: 100%;
+      background: linear-gradient(135deg, #0D1B2A 0%, #1B2E3C 60%, #0F2236 100%);
+      color: #fff;
+      padding: 3rem 2.4rem 2.5rem;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .h-hero::before {
+      content: '';
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(62,201,126,0.2) 0%, transparent 70%);
+    }
+    .h-hero-inner {
+      max-width: 1060px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    .h-hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(62,201,126,0.15);
+      border: 1px solid rgba(62,201,126,0.3);
+      color: var(--accent);
+      padding: .28rem .85rem;
+      border-radius: 100px;
+      font-size: .75rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+    }
+    .h-hero-tag::before {
+      content: '●';
+      font-size: .45rem;
+      animation: blink 2s infinite;
+    }
+    @keyframes blink {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .h-hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -1px;
+      margin-bottom: .6rem;
+    }
+    .h-hero h1 em {
+      color: var(--accent);
+      font-style: normal;
+    }
+    .h-hero p {
+      font-size: .95rem;
+      color: rgba(255,255,255,0.6);
+    }
+
+    .h-main {
+      width: 100%;
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 2.5rem 2.4rem;
+      flex: 1;
+    }
+    .sec-label {
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #6B7066;
+      margin-bottom: 1.2rem;
+      font-weight: 600;
+    }
+
+    /* STAT CARDS (reused) */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4,1fr);
+      gap: 1rem;
+      margin-bottom: 2.2rem;
+    }
+    .sc {
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.07);
+      border-radius: 18px;
+      padding: 1.3rem 1.4rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform .2s;
+    }
+    .sc:hover {
+      transform: translateY(-3px);
+    }
+    .sc::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+    .sc.g::before { background: var(--accent); }
+    .sc.t::before { background: #0BCBD4; }
+    .sc.a::before { background: #F5A623; }
+    .sc.p::before { background: #7B61FF; }
+    .sc-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      margin-bottom: .9rem;
+    }
+    .sc.g .sc-icon { background: var(--accent-pale); }
+    .sc.t .sc-icon { background: #E0FAFA; }
+    .sc.a .sc-icon { background: #FEF6E7; }
+    .sc.p .sc-icon { background: #F0EDFF; }
+    .sc-val {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #1A1E16;
+      line-height: 1;
+      margin-bottom: .25rem;
+    }
+    .sc-lbl {
+      font-size: .78rem;
+      color: #6B7066;
+    }
+    .sc-chg {
+      position: absolute;
+      top: 1.2rem;
+      right: 1rem;
+      font-size: .7rem;
+      font-weight: 600;
+      padding: .18rem .45rem;
+      border-radius: 100px;
+    }
+    .sc-chg.up { background: #E8FAF1; color: var(--accent-dark); }
+    .sc-chg.dn { background: #FFEAEA; color: #D63535; }
+    .sc-chg.nu { background: #EFF6FF; color: #2255CC; }
+
+    /* TWO COL */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 1.3rem;
+      margin-bottom: 2.2rem;
+    }
+    .two-col-eq {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.3rem;
+      margin-bottom: 2.2rem;
+    }
+    .hcard {
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.07);
+      border-radius: 18px;
+      padding: 1.6rem;
+    }
+    .hcard-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1A1E16;
+      margin-bottom: .25rem;
+    }
+    .hcard-sub {
+      font-size: .78rem;
+      color: #6B7066;
+      margin-bottom: 1.3rem;
+    }
+    .hcard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.2rem;
+    }
+    .badge {
+      padding: .22rem .65rem;
+      border-radius: 100px;
+      font-size: .72rem;
+      font-weight: 600;
+    }
+    .badge-g { background: var(--accent-pale); color: var(--accent-dark); }
+    .badge-a { background: #FEF6E7; color: #C47F0A; }
+    .badge-r { background: #FFEAEA; color: #D63535; }
+
+    /* Activity Item (similar to appointment) */
+    .act-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: .9rem 0;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    .act-item:last-child {
+      border-bottom: none;
+    }
+    .act-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .act-info {
+      flex: 1;
+    }
+    .act-name {
+      font-size: .88rem;
+      font-weight: 600;
+      color: #1A1E16;
+    }
+    .act-meta {
+      font-size: .74rem;
+      color: #6B7066;
+      margin-top: 2px;
+    }
+    .act-value {
+      font-size: .8rem;
+      font-weight: 600;
+      color: #1A1E16;
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    /* Log Activity Form (reuses book form) */
+    .log-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.3rem;
+      margin-bottom: 2.2rem;
+    }
+    .form-section {
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.07);
+      border-radius: 18px;
+      padding: 1.6rem;
+    }
+    .form-row {
+      margin-bottom: 1.1rem;
+    }
+    .form-row label {
+      display: block;
+      font-size: .76rem;
+      font-weight: 500;
+      color: #6B7066;
+      margin-bottom: .4rem;
+      letter-spacing: .5px;
+    }
+    .form-row select,
+    .form-row input,
+    .form-row textarea {
+      width: 100%;
+      padding: .75rem 1rem;
+      background: #F4F6F0;
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .88rem;
+      color: #1A1E16;
+      outline: none;
+      transition: border-color .2s, background .2s;
+    }
+    .form-row select:focus,
+    .form-row input:focus,
+    .form-row textarea:focus {
+      border-color: var(--accent);
+      background: var(--accent-pale);
+    }
+    .form-row textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+    .log-btn {
+      width: 100%;
+      padding: .9rem;
+      background: var(--accent);
+      color: #0f1a14;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Syne', sans-serif;
+      font-size: .92rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s, transform .15s;
+      margin-top: .5rem;
+    }
+    .log-btn:hover {
+      background: var(--accent-dark);
+      transform: translateY(-1px);
+    }
+
+    /* Progress bars for weekly summary */
+    .progress-bar-wrap {
+      margin-bottom: .8rem;
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: .8rem;
+      margin-bottom: .2rem;
+      color: #1A1E16;
+    }
+    .progress-track {
+      height: 8px;
+      background: #F4F6F0;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 10px;
+      background: var(--accent);
+      transition: width .6s ease;
+    }
+
+    /* Toast, Modal (same) */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: #1A1E16;
+      color: #fff;
+      padding: .85rem 1.4rem;
+      border-radius: 14px;
+      font-size: .88rem;
+      font-weight: 500;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      animation: slideUp .4s ease;
+    }
+    @keyframes slideUp {
+      from { opacity:0; transform:translateY(20px); }
+      to { opacity:1; transform:translateY(0); }
+    }
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s;
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal-box {
+      background: #fff;
+      border-radius: 24px;
+      padding: 2rem;
+      width: 440px;
+      max-width: 90vw;
+      transform: translateY(20px);
+      transition: transform .3s;
+      color: #1A1E16;
+    }
+    .modal-overlay.open .modal-box {
+      transform: translateY(0);
+    }
+    .modal-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin-bottom: .3rem;
+    }
+    .modal-sub {
+      font-size: .82rem;
+      color: #6B7066;
+      margin-bottom: 1.4rem;
+    }
+    .modal-actions {
+      display: flex;
+      gap: .8rem;
+      margin-top: 1.4rem;
+    }
+    .modal-btn-primary {
+      flex: 1;
+      padding: .75rem;
+      background: var(--accent);
+      color: #0f1a14;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Syne', sans-serif;
+      font-size: .88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .modal-btn-primary:hover {
+      background: var(--accent-dark);
+    }
+    .modal-btn-sec {
+      flex: 1;
+      padding: .75rem;
+      background: transparent;
+      color: #6B7066;
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .88rem;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .modal-btn-sec:hover {
+      background: #F4F6F0;
+    }
+    #transition-overlay {
+      display: none;
+    }
+  </style>
+</head>
+<body data-on="false">
+
+  <!-- ═══ LOGIN PAGE ═══ -->
+  <div class="page" id="page-login">
+    <div class="bg-grid"></div>
+    <div class="lamp-glow-blob" id="glowBlob"></div>
+    <div class="scene">
+      <div class="lamp-col">
+        <div class="lamp-mount"></div>
+        <div class="lamp-wrap" id="lampWrap" onclick="toggleLamp(event)">
+          <div class="lamp-cord"></div>
+          <div class="lamp-body">
+            <div class="lamp-shade"></div>
+            <div class="lamp-bulb"></div>
+          </div>
+          <div class="lamp-hint">Click to turn on</div>
+        </div>
+      </div>
+      <div style="position:relative;">
+        <!-- Login Form -->
+        <div class="login-form" id="loginForm">
+          <div class="form-logo">
+            <div class="logo-icon">🏃</div>
+            <div class="logo-text">Wellness<span>Track</span></div>
+          </div>
+          <div class="form-heading">Student Wellness</div>
+          <div class="form-sub">Track your fitness &amp; health</div>
+          <div class="input-group">
+            <label class="input-label">Email</label>
+            <span class="input-icon">📧</span>
+            <input class="input-field" type="email" id="emailInput" placeholder="student@college.edu">
+          </div>
+          <div class="input-group">
+            <label class="input-label">Password</label>
+            <span class="input-icon">🔒</span>
+            <input class="input-field" type="password" id="pwInput" placeholder="••••••••">
+          </div>
+          <div class="remember-row">
+            <label class="remember-label"><input type="checkbox"> Remember me</label>
+            <a href="#" class="forgot-link">Forgot password?</a>
+          </div>
+          <button class="submit-btn" id="signInBtn" onclick="handleLogin()">Sign In →</button>
+          <div class="divider">or continue with</div>
+          <button class="social-btn" onclick="handleLogin()">🔑 Google</button>
+          <button class="social-btn" onclick="handleLogin()">🍎 Apple</button>
+          <div class="signup-row">New student? <a onclick="showRegisterForm()">Register here</a></div>
+        </div>
+        <!-- Register Form -->
+        <div class="register-form" id="registerForm">
+          <div class="form-logo">
+            <div class="logo-icon">🏃</div>
+            <div class="logo-text">Wellness<span>Track</span></div>
+          </div>
+          <div class="form-heading">Create Account</div>
+          <div class="form-sub">Join the wellness community</div>
+          <div class="input-group">
+            <label class="input-label">Full Name</label>
+            <span class="input-icon">👤</span>
+            <input class="input-field" type="text" id="regName" placeholder="Alex Johnson">
+          </div>
+          <div class="input-group">
+            <label class="input-label">Email</label>
+            <span class="input-icon">📧</span>
+            <input class="input-field" type="email" id="regEmail" placeholder="student@college.edu">
+          </div>
+          <div class="input-group">
+            <label class="input-label">Password</label>
+            <span class="input-icon">🔒</span>
+            <input class="input-field" type="password" id="regPw" placeholder="••••••••">
+          </div>
+          <div class="input-group">
+            <label class="input-label">Confirm Password</label>
+            <span class="input-icon">✓</span>
+            <input class="input-field" type="password" id="regPw2" placeholder="••••••••">
+          </div>
+          <button class="submit-btn" onclick="handleRegister()">Create Account →</button>
+          <div class="auth-toggle">Already have an account? <a onclick="showLoginForm()">Sign in here</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ HOME PAGE ═══ -->
+  <div class="page hidden" id="page-home">
+    <nav class="hn">
+      <div class="hn-logo">Wellness<span>Track</span></div>
+      <ul class="hn-links">
+        <li><a href="#" onclick="showPage('dashboard',this)" class="active">Dashboard</a></li>
+        <li><a href="#" onclick="showPage('log',this)">Log Activity</a></li>
+        <li><a href="#" onclick="showPage('progress',this)">Progress</a></li>
+        <li><a href="#" onclick="showPage('history',this)">History</a></li>
+      </ul>
+      <div class="hn-right">
+        <div class="hn-avatar" id="userAvatar">AJ</div>
+        <button class="hn-logout" onclick="handleLogout()">Sign out</button>
+      </div>
+    </nav>
+
+    <!-- DASHBOARD -->
+    <div class="inner-page active" id="inner-dashboard">
+      <div class="h-hero">
+        <div class="h-hero-inner">
+          <div class="h-hero-tag" id="liveDate">Live · Loading...</div>
+          <h1>Hello, <em id="userName"></em> 👋</h1>
+          <p>Stay active, stay healthy. Here's your daily wellness snapshot.</p>
+        </div>
+      </div>
+      <div class="h-main">
+        <div class="sec-label">Today's Stats</div>
+        <div class="stat-grid" id="statsGrid">
+          <div class="sc g"><span class="sc-chg up">+12%</span><div class="sc-icon">👣</div><div class="sc-val" id="stepCount">0</div><div class="sc-lbl">Steps</div></div>
+          <div class="sc t"><span class="sc-chg up">+5%</span><div class="sc-icon">🔥</div><div class="sc-val" id="calories">0</div><div class="sc-lbl">Calories</div></div>
+          <div class="sc a"><span class="sc-chg nu">⏳</span><div class="sc-icon">💧</div><div class="sc-val" id="water">0</div><div class="sc-lbl">Water (ml)</div></div>
+          <div class="sc p"><span class="sc-chg up">↑ 8%</span><div class="sc-icon">😴</div><div class="sc-val" id="sleep">0</div><div class="sc-lbl">Sleep (hrs)</div></div>
+        </div>
+        <div class="two-col">
+          <div class="hcard">
+            <div class="hcard-header">
+              <div><div class="hcard-title">Recent Activity</div><div class="hcard-sub">Last 3 entries</div></div>
+              <span class="badge badge-g" id="recentCount">0 today</span>
+            </div>
+            <div id="recentActivities"></div>
+          </div>
+          <div class="hcard">
+            <div class="hcard-title" style="margin-bottom:.25rem">Daily Goals</div>
+            <div class="hcard-sub">Today's progress</div>
+            <div class="progress-bar-wrap">
+              <div class="progress-label"><span>Steps (10k)</span><span id="stepProgressLabel">0%</span></div>
+              <div class="progress-track"><div class="progress-fill" id="stepProgressFill" style="width:0%"></div></div>
+            </div>
+            <div class="progress-bar-wrap">
+              <div class="progress-label"><span>Water (2000ml)</span><span id="waterProgressLabel">0%</span></div>
+              <div class="progress-track"><div class="progress-fill" id="waterProgressFill" style="width:0%"></div></div>
+            </div>
+            <div class="progress-bar-wrap">
+              <div class="progress-label"><span>Sleep (8hrs)</span><span id="sleepProgressLabel">0%</span></div>
+              <div class="progress-track"><div class="progress-fill" id="sleepProgressFill" style="width:0%"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="sec-label">This Week</div>
+        <div class="hcard" style="margin-bottom:3rem">
+          <div class="hcard-header">
+            <div><div class="hcard-title">Weekly Activity</div><div class="hcard-sub">Steps per day</div></div>
+            <span class="badge badge-g">Last 7 days</span>
+          </div>
+          <div id="weeklyChart" style="display:flex; gap:1rem; justify-content:space-around; padding:1rem 0;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOG ACTIVITY -->
+    <div class="inner-page" id="inner-log">
+      <div class="h-hero" style="background:linear-gradient(135deg,#0D2318,#1A3828 60%,#0F2220)">
+        <div class="h-hero-inner">
+          <div class="h-hero-tag">Log your progress</div>
+          <h1>Log <em>Activity</em></h1>
+          <p>Add workouts, meals, water, or sleep – every entry counts.</p>
+        </div>
+      </div>
+      <div class="h-main">
+        <div class="sec-label">New Entry</div>
+        <div class="log-grid">
+          <div class="form-section">
+            <div class="hcard-title" style="margin-bottom:.3rem">Activity Details</div>
+            <div class="hcard-sub">Fill in below</div>
+            <div class="form-row">
+              <label>Type</label>
+              <select id="activityType">
+                <option value="steps">Steps</option>
+                <option value="calories">Calories Burned</option>
+                <option value="water">Water (ml)</option>
+                <option value="sleep">Sleep (hours)</option>
+                <option value="workout">Workout (mins)</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Value</label>
+              <input type="number" id="activityValue" placeholder="e.g. 5000">
+            </div>
+            <div class="form-row">
+              <label>Date</label>
+              <input type="date" id="activityDate">
+            </div>
+            <div class="form-row">
+              <label>Note (optional)</label>
+              <textarea id="activityNote" placeholder="Any extra info…"></textarea>
+            </div>
+            <button class="log-btn" onclick="logActivity()">✅ Log Entry</button>
+          </div>
+          <div class="form-section">
+            <div class="hcard-title" style="margin-bottom:.3rem">Quick Log</div>
+            <div class="hcard-sub">Common entries</div>
+            <div style="display:flex; flex-wrap:wrap; gap:.5rem; margin-top:1rem;">
+              <button class="log-btn" style="flex:1; min-width:80px; padding:.5rem;" onclick="quickLog('steps',5000)">+5000 Steps</button>
+              <button class="log-btn" style="flex:1; min-width:80px; padding:.5rem;" onclick="quickLog('water',500)">+500ml Water</button>
+              <button class="log-btn" style="flex:1; min-width:80px; padding:.5rem;" onclick="quickLog('sleep',1)">+1hr Sleep</button>
+              <button class="log-btn" style="flex:1; min-width:80px; padding:.5rem;" onclick="quickLog('calories',200)">+200 Cal</button>
+            </div>
+          </div>
+        </div>
+        <div class="sec-label">Today's Log</div>
+        <div class="hcard" style="margin-bottom:3rem">
+          <div id="todayLog"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="inner-page" id="inner-progress">
+      <div class="h-hero" style="background:linear-gradient(135deg,#1E1A2E,#2D1E3A 60%,#1A1428)">
+        <div class="h-hero-inner">
+          <div class="h-hero-tag" style="background:rgba(123,97,255,.15);border-color:rgba(123,97,255,.3);color:#7B61FF;">Analytics</div>
+          <h1>Your <em style="color:#7B61FF">Progress</em></h1>
+          <p>See how you're improving week by week.</p>
+        </div>
+      </div>
+      <div class="h-main">
+        <div class="sec-label">Weekly Summary</div>
+        <div class="two-col-eq">
+          <div class="hcard">
+            <div class="hcard-title">Steps</div>
+            <div id="weeklySteps" style="height:200px; display:flex; align-items:flex-end; gap:8px; padding-top:1rem;"></div>
+          </div>
+          <div class="hcard">
+            <div class="hcard-title">Calories</div>
+            <div id="weeklyCalories" style="height:200px; display:flex; align-items:flex-end; gap:8px; padding-top:1rem;"></div>
+          </div>
+        </div>
+        <div class="sec-label">Monthly Trends</div>
+        <div class="full-card">
+          <div class="hcard-title">Average Daily Steps</div>
+          <div style="display:flex; gap:1.5rem; flex-wrap:wrap; margin-top:1rem;">
+            <div><span style="color:#6B7066;">This week</span><br><strong id="avgThisWeek">0</strong></div>
+            <div><span style="color:#6B7066;">Last week</span><br><strong id="avgLastWeek">0</strong></div>
+            <div><span style="color:#6B7066;">Change</span><br><strong id="avgChange">0%</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="inner-page" id="inner-history">
+      <div class="h-hero" style="background:linear-gradient(135deg,#1E1A2E,#2D1E3A 60%,#1A1428)">
+        <div class="h-hero-inner">
+          <div class="h-hero-tag" style="background:rgba(123,97,255,.15);border-color:rgba(123,97,255,.3);color:#7B61FF;">Records</div>
+          <h1>Activity <em style="color:#7B61FF">History</em></h1>
+          <p>Every workout, step, and sip – all in one place.</p>
+        </div>
+      </div>
+      <div class="h-main">
+        <div class="sec-label">All Entries</div>
+        <div class="full-card">
+          <div id="historyList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ─── DATABASE ───
+    function getUsers() { try { return JSON.parse(localStorage.getItem('wellness_users')) || {}; } catch(e) { return {}; } }
+    function saveUsers(u) { localStorage.setItem('wellness_users', JSON.stringify(u)); }
+    function getActivityKey(e) { return 'wellness_activities_' + e; }
+    function getActivities(e) { try { return JSON.parse(localStorage.getItem(getActivityKey(e))) || []; } catch(e) { return []; } }
+    function saveActivities(e, acts) { localStorage.setItem(getActivityKey(e), JSON.stringify(acts)); }
+
+    let currentUser = null;
+
+    // ─── LAMP ───
+    let isOn = false;
+    function toggleLamp(e) {
+      isOn = !isOn;
+      document.body.setAttribute('data-on', isOn);
+      const lf = document.getElementById('loginForm'), rf = document.getElementById('registerForm');
+      if (isOn) { lf.classList.add('active'); rf.classList.remove('active'); }
+      else { lf.classList.remove('active'); rf.classList.remove('active'); }
+    }
+    function showRegisterForm() { document.getElementById('loginForm').classList.remove('active'); document.getElementById('registerForm').classList.add('active'); }
+    function showLoginForm() { document.getElementById('registerForm').classList.remove('active'); document.getElementById('loginForm').classList.add('active'); }
+
+    // ─── REGISTER ───
+    function handleRegister() {
+      const n = document.getElementById('regName').value.trim();
+      const e = document.getElementById('regEmail').value.trim();
+      const p = document.getElementById('regPw').value;
+      const p2 = document.getElementById('regPw2').value;
+      if (!n || !e || !p || !p2) { showToast('⚠️ All fields required'); return; }
+      if (p !== p2) { showToast('⚠️ Passwords do not match'); return; }
+      if (p.length < 4) { showToast('⚠️ Password min 4 chars'); return; }
+      const users = getUsers();
+      if (users[e]) { showToast('⚠️ Email already registered'); return; }
+      users[e] = { name: n, password: p };
+      saveUsers(users);
+      showToast('✅ Account created! Please sign in.');
+      showLoginForm();
+      document.getElementById('regName').value = '';
+      document.getElementById('regEmail').value = '';
+      document.getElementById('regPw').value = '';
+      document.getElementById('regPw2').value = '';
+    }
+
+    // ─── LOGIN ───
+    function handleLogin() {
+      const e = document.getElementById('emailInput').value.trim();
+      const p = document.getElementById('pwInput').value.trim();
+      const users = getUsers();
+      if (!e || !p) { showToast('⚠️ Enter email and password'); return; }
+      const user = users[e];
+      if (!user) { showToast('⚠️ User not found. Register first.'); return; }
+      if (user.password !== p) { showToast('⚠️ Incorrect password'); return; }
+      currentUser = e;
+      const name = user.name || e.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const initials = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+      document.getElementById('userName').textContent = name;
+      document.getElementById('userAvatar').textContent = initials;
+      document.getElementById('page-login').classList.add('hidden');
+      document.getElementById('page-home').classList.remove('hidden');
+      document.getElementById('page-home').classList.add('active');
+      const now = new Date();
+      document.getElementById('liveDate').textContent = 'Live · ' + now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('activityDate').value = today;
+      renderAll();
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      document.getElementById('page-home').classList.remove('active');
+      document.getElementById('page-home').classList.add('hidden');
+      document.getElementById('page-login').classList.remove('hidden');
+      document.getElementById('loginForm').classList.remove('active');
+      document.getElementById('registerForm').classList.remove('active');
+      document.body.setAttribute('data-on', false);
+      isOn = false;
+      document.getElementById('signInBtn').textContent = 'Sign In →';
+      document.getElementById('emailInput').value = '';
+      document.getElementById('pwInput').value = '';
+      showToast('👋 Signed out');
+    }
+
+    // ─── HELPERS ───
+    function getToday() {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    function formatDate(d) {
+      if (!d) return '';
+      const parts = d.split('-');
+      if (parts.length !== 3) return d;
+      const dt = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+      return dt.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+    }
+
+    function getWeekDates() {
+      const today = new Date();
+      const day = today.getDay(); // 0=Sun, 1=Mon, ...
+      const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Monday
+      const monday = new Date(today);
+      monday.setDate(diff);
+      const week = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monday);
+        d.setDate(d.getDate() + i);
+        week.push(d.toISOString().split('T')[0]);
+      }
+      return week;
+    }
+
+    // ─── LOGIC ───
+    function logActivity() {
+      if (!currentUser) { showToast('⚠️ Please sign in'); return; }
+      const type = document.getElementById('activityType').value;
+      const val = parseFloat(document.getElementById('activityValue').value);
+      const date = document.getElementById('activityDate').value || getToday();
+      const note = document.getElementById('activityNote').value.trim() || '';
+      if (!val || val <= 0) { showToast('⚠️ Enter a valid value'); return; }
+      const acts = getActivities(currentUser);
+      acts.push({ type, value: val, date, note, timestamp: Date.now() });
+      saveActivities(currentUser, acts);
+      document.getElementById('activityValue').value = '';
+      document.getElementById('activityNote').value = '';
+      renderAll();
+      showToast(`✅ Logged ${type}: ${val}`);
+    }
+
+    function quickLog(type, val) {
+      if (!currentUser) { showToast('⚠️ Please sign in'); return; }
+      const date = getToday();
+      const acts = getActivities(currentUser);
+      acts.push({ type, value: val, date, note: 'Quick log', timestamp: Date.now() });
+      saveActivities(currentUser, acts);
+      renderAll();
+      showToast(`✅ Quick log: ${type} +${val}`);
+    }
+
+    // ─── RENDER ───
+    function renderAll() {
+      if (!currentUser) return;
+      const acts = getActivities(currentUser);
+      const today = getToday();
+      const todayActs = acts.filter(a => a.date === today);
+
+      // ---- Today's stats ----
+      const steps = todayActs.filter(a => a.type === 'steps').reduce((sum, a) => sum + a.value, 0);
+      const calories = todayActs.filter(a => a.type === 'calories').reduce((sum, a) => sum + a.value, 0);
+      const water = todayActs.filter(a => a.type === 'water').reduce((sum, a) => sum + a.value, 0);
+      const sleep = todayActs.filter(a => a.type === 'sleep').reduce((sum, a) => sum + a.value, 0);
+
+      document.getElementById('stepCount').textContent = steps;
+      document.getElementById('calories').textContent = calories;
+      document.getElementById('water').textContent = water;
+      document.getElementById('sleep').textContent = sleep.toFixed(1);
+
+      // Goals progress
+      const stepGoal = 10000, waterGoal = 2000, sleepGoal = 8;
+      const stepPct = Math.min(100, (steps / stepGoal) * 100);
+      const waterPct = Math.min(100, (water / waterGoal) * 100);
+      const sleepPct = Math.min(100, (sleep / sleepGoal) * 100);
+      document.getElementById('stepProgressFill').style.width = stepPct + '%';
+      document.getElementById('stepProgressLabel').textContent = Math.round(stepPct) + '%';
+      document.getElementById('waterProgressFill').style.width = waterPct + '%';
+      document.getElementById('waterProgressLabel').textContent = Math.round(waterPct) + '%';
+      document.getElementById('sleepProgressFill').style.width = sleepPct + '%';
+      document.getElementById('sleepProgressLabel').textContent = Math.round(sleepPct) + '%';
+
+      // Recent activities (last 3)
+      const recent = acts.slice(-3).reverse();
+      const recentContainer = document.getElementById('recentActivities');
+      document.getElementById('recentCount').textContent = todayActs.length + ' today';
+      if (recent.length === 0) {
+        recentContainer.innerHTML = '<div style="padding:1rem 0;color:#6B7066;font-size:.9rem;">No activities logged yet.</div>';
+      } else {
+        recentContainer.innerHTML = recent.map(a => `
+          <div class="act-item">
+            <div class="act-icon" style="background:#E8FAF1">${iconForType(a.type)}</div>
+            <div class="act-info">
+              <div class="act-name">${a.type.charAt(0).toUpperCase() + a.type.slice(1)}</div>
+              <div class="act-meta">${formatDate(a.date)}${a.note ? ' · ' + a.note : ''}</div>
+            </div>
+            <div class="act-value">${a.value}</div>
+          </div>
+        `).join('');
+      }
+
+      // Today's log in Log page
+      const todayLogContainer = document.getElementById('todayLog');
+      if (todayActs.length === 0) {
+        todayLogContainer.innerHTML = '<div style="padding:1rem 0;color:#6B7066;font-size:.9rem;">Nothing logged today. Start now!</div>';
+      } else {
+        todayLogContainer.innerHTML = todayActs.map(a => `
+          <div class="act-item">
+            <div class="act-icon" style="background:#E8FAF1">${iconForType(a.type)}</div>
+            <div class="act-info">
+              <div class="act-name">${a.type.charAt(0).toUpperCase() + a.type.slice(1)}</div>
+              <div class="act-meta">${a.note || ''}</div>
+            </div>
+            <div class="act-value">${a.value}</div>
+          </div>
+        `).join('');
+      }
+
+      // Weekly chart (Dashboard)
+      const weekDates = getWeekDates();
+      const weekSteps = weekDates.map(d => acts.filter(a => a.date === d && a.type === 'steps').reduce((s, a) => s + a.value, 0));
+      const maxWeekStep = Math.max(...weekSteps, 1);
+      const chartContainer = document.getElementById('weeklyChart');
+      chartContainer.innerHTML = weekDates.map((d, i) => {
+        const pct = (weekSteps[i] / maxWeekStep) * 100;
+        const dayLabel = new Date(d).toLocaleDateString('en', { weekday:'short' });
+        return `<div style="display:flex; flex-direction:column; align-items:center; flex:1;">
+          <div style="height:${Math.max(20, pct)}px; width:24px; background:var(--accent); border-radius:6px 6px 0 0; transition:height .4s;"></div>
+          <span style="font-size:.7rem; color:#6B7066; margin-top:4px;">${dayLabel}</span>
+          <span style="font-size:.6rem; color:#1A1E16;">${weekSteps[i]}</span>
+        </div>`;
+      }).join('');
+
+      // Progress page charts
+      const weeklyStepsContainer = document.getElementById('weeklySteps');
+      const maxSteps = Math.max(...weekSteps, 1);
+      weeklyStepsContainer.innerHTML = weekDates.map((d,i) => {
+        const pct = (weekSteps[i] / maxSteps) * 100;
+        const dayLabel = new Date(d).toLocaleDateString('en', { weekday:'short' });
+        return `<div style="display:flex; flex-direction:column; align-items:center; flex:1;">
+          <div style="height:${Math.max(20, pct)}px; width:24px; background:#0BCBD4; border-radius:6px 6px 0 0; transition:height .4s;"></div>
+          <span style="font-size:.7rem; color:#6B7066; margin-top:4px;">${dayLabel}</span>
+        </div>`;
+      }).join('');
+
+      // Weekly calories (same pattern)
+      const weekCalories = weekDates.map(d => acts.filter(a => a.date === d && a.type === 'calories').reduce((s,a) => s + a.value, 0));
+      const maxCal = Math.max(...weekCalories, 1);
+      const weeklyCalContainer = document.getElementById('weeklyCalories');
+      weeklyCalContainer.innerHTML = weekDates.map((d,i) => {
+        const pct = (weekCalories[i] / maxCal) * 100;
+        const dayLabel = new Date(d).toLocaleDateString('en', { weekday:'short' });
+        return `<div style="display:flex; flex-direction:column; align-items:center; flex:1;">
+          <div style="height:${Math.max(20, pct)}px; width:24px; background:#F5A623; border-radius:6px 6px 0 0; transition:height .4s;"></div>
+          <span style="font-size:.7rem; color:#6B7066; margin-top:4px;">${dayLabel}</span>
+        </div>`;
+      }).join('');
+
+      // Monthly trends (simple averages)
+      const thisWeekSteps = weekSteps.reduce((a,b) => a+b, 0);
+      const avgThis = Math.round(thisWeekSteps / 7);
+      document.getElementById('avgThisWeek').textContent = avgThis;
+
+      // Last week (previous 7 days)
+      const lastWeekDates = weekDates.map(d => {
+        const dt = new Date(d);
+        dt.setDate(dt.getDate() - 7);
+        return dt.toISOString().split('T')[0];
+      });
+      const lastWeekSteps = lastWeekDates.map(d => acts.filter(a => a.date === d && a.type === 'steps').reduce((s,a) => s + a.value, 0));
+      const avgLast = Math.round(lastWeekSteps.reduce((a,b) => a+b, 0) / 7);
+      document.getElementById('avgLastWeek').textContent = avgLast;
+      const change = avgLast === 0 ? 0 : Math.round(((avgThis - avgLast) / avgLast) * 100);
+      document.getElementById('avgChange').textContent = (change >= 0 ? '+' : '') + change + '%';
+
+      // History
+      const historyList = document.getElementById('historyList');
+      if (acts.length === 0) {
+        historyList.innerHTML = '<div style="padding:1rem 0;color:#6B7066;font-size:.9rem;">No entries yet.</div>';
+      } else {
+        historyList.innerHTML = acts.slice().reverse().map(a => `
+          <div class="act-item">
+            <div class="act-icon" style="background:#E8FAF1">${iconForType(a.type)}</div>
+            <div class="act-info">
+              <div class="act-name">${a.type.charAt(0).toUpperCase() + a.type.slice(1)}</div>
+              <div class="act-meta">${formatDate(a.date)}${a.note ? ' · ' + a.note : ''}</div>
+            </div>
+            <div class="act-value">${a.value}</div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function iconForType(type) {
+      const map = { steps:'👣', calories:'🔥', water:'💧', sleep:'😴', workout:'💪' };
+      return map[type] || '📊';
+    }
+
+    // ─── NAVIGATION ───
+    function showPage(id, el) {
+      document.querySelectorAll('.inner-page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.hn-links a').forEach(a => a.classList.remove('active'));
+      const t = document.getElementById('inner-' + id);
+      if (t) { t.classList.add('active'); t.scrollTop = 0; if (id === 'dashboard' || id === 'log' || id === 'progress' || id === 'history') renderAll(); }
+      if (el) el.classList.add('active');
+      return false;
+    }
+    document.querySelectorAll('.hn-links a').forEach(a => a.addEventListener('click', e => e.preventDefault()));
+
+    // ─── TOAST ───
+    function showToast(msg) {
+      const existing = document.querySelector('.toast');
+      if (existing) existing.remove();
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .4s'; setTimeout(() => t.remove(), 400); }, 3000);
+    }
+
+    // ─── INIT ───
+    document.addEventListener('DOMContentLoaded', function() {
+      // Pre-populate demo user
+      const users = getUsers();
+      if (!users['demo@wellness.com']) {
+        users['demo@wellness.com'] = { name: 'Demo Student', password: 'demo123' };
+        saveUsers(users);
+      }
+      // Add sample activities for demo
+      const demoActs = getActivities('demo@wellness.com');
+      if (demoActs.length === 0) {
+        const today = getToday();
+        const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+        const yDate = yesterday.toISOString().split('T')[0];
+        const twoDays = new Date(); twoDays.setDate(twoDays.getDate() - 2);
+        const tDate = twoDays.toISOString().split('T')[0];
+        const samples = [
+          { type:'steps', value:8500, date:today, note:'Morning walk', timestamp:Date.now() - 3600000 },
+          { type:'calories', value:450, date:today, note:'Lunch', timestamp:Date.now() - 7200000 },
+          { type:'water', value:800, date:today, note:'After workout', timestamp:Date.now() - 1800000 },
+          { type:'sleep', value:7.5, date:yDate, note:'Good sleep', timestamp:Date.now() - 86400000 },
+          { type:'steps', value:6200, date:yDate, note:'Evening jog', timestamp:Date.now() - 90000000 },
+          { type:'calories', value:320, date:tDate, note:'Snack', timestamp:Date.now() - 172800000 },
+          { type:'water', value:1200, date:tDate, note:'Hydrated', timestamp:Date.now() - 180000000 },
+        ];
+        saveActivities('demo@wellness.com', samples);
+      }
+    });
+    // ─── WATCH INTEGRATION ───
+// Poll for watch data from localStorage every 2 seconds
+let lastWatchDataTimestamp = 0;
+
+setInterval(function() {
+  if (!currentUser) return;
+  const key = 'wellness_watch_data';
+  const raw = localStorage.getItem(key);
+  if (!raw) return;
+  try {
+    const data = JSON.parse(raw);
+    if (data.timestamp && data.timestamp > lastWatchDataTimestamp && data.user === currentUser) {
+      lastWatchDataTimestamp = data.timestamp;
+      const acts = getActivities(currentUser);
+      const now = new Date().toISOString().split('T')[0];
+      if (data.steps) {
+        acts.push({
+          type: 'steps',
+          value: data.steps,
+          date: now,
+          note: '⌚ Synced from watch',
+          timestamp: Date.now()
+        });
+      }
+      if (data.calories) {
+        acts.push({
+          type: 'calories',
+          value: data.calories,
+          date: now,
+          note: '⌚ Synced from watch',
+          timestamp: Date.now()
+        });
+      }
+      if (data.heartRate) {
+        acts.push({
+          type: 'workout',
+          value: Math.round(data.heartRate / 10),
+          date: now,
+          note: `❤️ Heart rate: ${data.heartRate} BPM (synced from watch)`,
+          timestamp: Date.now()
+        });
+        localStorage.setItem('wellness_heartrate_' + currentUser, JSON.stringify({
+          value: data.heartRate,
+          timestamp: Date.now()
+        }));
+      }
+      if (data.steps || data.calories || data.heartRate) {
+        saveActivities(currentUser, acts);
+        renderAll();
+        showToast(`⌚ Watch synced: ${data.steps || 0} steps, ❤️ ${data.heartRate || 0} BPM`);
+      }
+      localStorage.removeItem(key);
+    }
+  } catch(e) {}
+}, 2000);
+
+// Listen for direct postMessage from watch
+window.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'watchData' && event.data.payload) {
+    const data = event.data.payload;
+    if (currentUser) {
+      const key = 'wellness_watch_data';
+      localStorage.setItem(key, JSON.stringify({
+        user: currentUser,
+        steps: data.steps || 0,
+        heartRate: data.heartRate || 0,
+        calories: data.calories || 0,
+        timestamp: Date.now()
+      }));
+      showToast('⌚ Watch data received (processing...)');
+    }
+  }
+});
+
+// Expose a function for the watch to call directly
+function syncWatchData(steps, heartRate, calories) {
+  if (!currentUser) { showToast('⚠️ Please sign in first'); return; }
+  const key = 'wellness_watch_data';
+  localStorage.setItem(key, JSON.stringify({
+    user: currentUser,
+    steps: steps || 0,
+    heartRate: heartRate || 0,
+    calories: calories || 0,
+    timestamp: Date.now()
+  }));
+  showToast('⌚ Watch data queued for sync');
+}
+  </script>
+</body>
+</html>
