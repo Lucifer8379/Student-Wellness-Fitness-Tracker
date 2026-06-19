@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⌚ Smart Watch Simulator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #0a0a0f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'DM Sans', sans-serif;
+      color: #fff;
+    }
+    .watch-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+    }
+    .watch {
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #1a1a2e, #0a0a12);
+      border: 8px solid #2a2a3e;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 0 80px rgba(62,201,126,0.05);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    .watch::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.03);
+      pointer-events: none;
+    }
+    .watch-header {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      position: absolute;
+      top: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-weight: 500;
+    }
+    .watch-time {
+      font-size: 1.2rem;
+      font-weight: 300;
+      color: rgba(255,255,255,0.5);
+      position: absolute;
+      top: 20px;
+      right: 25px;
+      font-family: 'Syne', sans-serif;
+      letter-spacing: 1px;
+    }
+    .watch-display {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .watch-metric {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.1rem;
+    }
+    .watch-metric .icon {
+      font-size: 1.3rem;
+    }
+    .watch-metric .value {
+      font-weight: 600;
+      font-size: 1.4rem;
+      letter-spacing: 1px;
+      min-width: 60px;
+      text-align: right;
+    }
+    .watch-metric .label {
+      color: rgba(255,255,255,0.4);
+      font-size: 0.75rem;
+      font-weight: 400;
+      min-width: 50px;
+    }
+    .heart-beat {
+      color: #ff4757;
+      animation: pulse 1.2s ease-in-out infinite;
+      font-size: 1.5rem;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+    .watch-status {
+      font-size: 0.6rem;
+      color: rgba(62,201,126,0.6);
+      letter-spacing: 1px;
+      margin-top: 5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .watch-status .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #3EC97E;
+      animation: blink 1.5s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      max-width: 400px;
+    }
+    .controls button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 30px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: 0.5px;
+    }
+    .btn-sync {
+      background: #3EC97E;
+      color: #0a0a0f;
+    }
+    .btn-sync:hover {
+      background: #27A563;
+      transform: scale(1.04);
+    }
+    .btn-reset {
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.6);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .btn-reset:hover {
+      background: rgba(255,255,255,0.12);
+    }
+    .btn-auto {
+      background: rgba(62,201,126,0.15);
+      color: #3EC97E;
+      border: 1px solid rgba(62,201,126,0.2);
+    }
+    .btn-auto:hover {
+      background: rgba(62,201,126,0.25);
+    }
+    .btn-auto.active {
+      background: #3EC97E;
+      color: #0a0a0f;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: rgba(255,255,255,0.3);
+      font-size: 0.7rem;
+    }
+    .status-bar .connected {
+      color: #3EC97E;
+    }
+    .status-bar .disconnected {
+      color: #ff4757;
+    }
+  </style>
+</head>
+<body>
+
+<div class="watch-container">
+  <!-- Watch Face -->
+  <div class="watch" id="watchFace">
+    <div class="watch-header">⌚ LIVE</div>
+    <div class="watch-time" id="watchTime">12:00</div>
+    <div class="watch-display">
+      <div class="watch-metric">
+        <span class="icon">👣</span>
+        <span class="value" id="watchSteps">0</span>
+        <span class="label">STEPS</span>
+      </div>
+      <div class="watch-metric">
+        <span class="icon heart-beat">❤️</span>
+        <span class="value" id="watchHeart">72</span>
+        <span class="label">BPM</span>
+      </div>
+      <div class="watch-metric">
+        <span class="icon">🔥</span>
+        <span class="value" id="watchCalories">0</span>
+        <span class="label">CAL</span>
+      </div>
+    </div>
+    <div class="watch-status">
+      <span class="dot"></span>
+      <span id="watchStatusText">Syncing...</span>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <button class="btn-sync" onclick="syncToWebsite()">📤 Sync to Website</button>
+    <button class="btn-auto" id="autoSyncBtn" onclick="toggleAutoSync()">🔄 Auto-Sync</button>
+    <button class="btn-reset" onclick="resetWatch()">↺ Reset</button>
+  </div>
+
+  <div class="status-bar">
+    <span id="connectionStatus" class="connected">● Connected to WellnessTrack</span>
+    <span>|</span>
+    <span id="syncStatus">Ready</span>
+  </div>
+</div>
+
+<script>
+  // ─── WATCH SIMULATOR ───
+  let steps = 7234;
+  let heartRate = 72;
+  let calories = 340;
+  let autoSyncInterval = null;
+  let isAutoSync = false;
+
+  // ─── UPDATE WATCH DISPLAY ───
+  function updateWatch() {
+    document.getElementById('watchSteps').textContent = steps;
+    document.getElementById('watchHeart').textContent = heartRate;
+    document.getElementById('watchCalories').textContent = calories;
+    
+    const now = new Date();
+    document.getElementById('watchTime').textContent = now.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false 
+    });
+  }
+
+  // ─── SIMULATE LIVE DATA ───
+  function simulateData() {
+    steps += Math.floor(Math.random() * 20) - 5;
+    if (steps < 0) steps = 0;
+    heartRate += Math.floor(Math.random() * 6) - 3;
+    if (heartRate < 50) heartRate = 50;
+    if (heartRate > 120) heartRate = 120;
+    calories += Math.floor(Math.random() * 5) + 1;
+    updateWatch();
+    document.getElementById('syncStatus').textContent = '🔄 Live data updating...';
+  }
+
+  // ─── SYNC TO WEBSITE (fixed) ───
+  function syncToWebsite() {
+    // Write to localStorage (shared key)
+    const key = 'wellness_watch_data';
+    const data = {
+      user: 'demo@wellness.com', // hardcoded for demo; in production use dynamic
+      steps: steps,
+      heartRate: heartRate,
+      calories: calories,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(key, JSON.stringify(data));
+
+    // Try postMessage if WellnessTrack is open in another window/tab
+    try {
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({ type: 'watchData', payload: data }, '*');
+      }
+    } catch(e) {}
+
+    // Also try to find a window named 'wellnessTrack'
+    const wellnessWindow = window.open('', 'wellnessTrack');
+    if (wellnessWindow && !wellnessWindow.closed) {
+      try {
+        wellnessWindow.postMessage({ type: 'watchData', payload: data }, '*');
+      } catch(e) {}
+    }
+
+    document.getElementById('syncStatus').textContent = '✅ Synced to website!';
+    document.getElementById('syncStatus').style.color = '#3EC97E';
+    showToast('✅ Data sent to WellnessTrack!');
+  }
+
+  // ─── AUTO SYNC ───
+  function toggleAutoSync() {
+    isAutoSync = !isAutoSync;
+    const btn = document.getElementById('autoSyncBtn');
+    if (isAutoSync) {
+      btn.textContent = '⏹ Stop Auto-Sync';
+      btn.classList.add('active');
+      autoSyncInterval = setInterval(() => {
+        simulateData();
+        syncToWebsite();
+      }, 5000);
+      document.getElementById('syncStatus').textContent = '🔄 Auto-sync ON (every 5s)';
+    } else {
+      btn.textContent = '🔄 Auto-Sync';
+      btn.classList.remove('active');
+      clearInterval(autoSyncInterval);
+      document.getElementById('syncStatus').textContent = 'Auto-sync OFF';
+    }
+  }
+
+  // ─── RESET ───
+  function resetWatch() {
+    steps = 0;
+    heartRate = 72;
+    calories = 0;
+    updateWatch();
+    document.getElementById('syncStatus').textContent = '🔄 Reset to zero';
+    setTimeout(() => {
+      document.getElementById('syncStatus').textContent = 'Ready';
+    }, 2000);
+    showToast('🔄 Watch reset');
+  }
+
+  // ─── TOAST ───
+  function showToast(msg) {
+    const existing = document.querySelector('.toast-msg');
+    if (existing) existing.remove();
+    const t = document.createElement('div');
+    t.className = 'toast-msg';
+    t.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(26,26,46,0.95);
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      z-index: 9999;
+      border: 1px solid rgba(255,255,255,0.06);
+      backdrop-filter: blur(10px);
+      font-family: 'DM Sans', sans-serif;
+      text-align: center;
+      max-width: 90%;
+    `;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => {
+      t.style.opacity = '0';
+      t.style.transition = 'opacity 0.4s';
+      setTimeout(() => t.remove(), 400);
+    }, 3000);
+  }
+
+  // ─── INIT ───
+  updateWatch();
+  setInterval(() => {
+    if (!isAutoSync) {
+      simulateData();
+    }
+  }, 2000);
+
+  console.log('⌚ Watch simulator ready!');
+</script>
+</body>
+</html>
